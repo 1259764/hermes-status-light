@@ -128,7 +128,7 @@ def monitor_loop():
                 idle_count = 0
             else:
                 idle_count += 1
-                if idle_count >= 3 and current.get('state') != 'green':
+                if idle_count >= 10 and current.get('state') != 'green':
                     write_state('green')
 
             prev_cpu = {k: v for k, v in prev_cpu.items() if k in pids}
