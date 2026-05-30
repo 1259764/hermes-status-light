@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes 工作状态</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d1117;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    user-select: none;
+  }
+  .container { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .light-box {
+    background: #161b22; border-radius: 24px; padding: 20px 30px;
+    display: flex; flex-direction: column; gap: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .light { width: 80px; height: 80px; border-radius: 50%; transition: all 0.4s; }
+  .light-red    { background: #2d1515; }
+  .light-yellow { background: #2d2510; }
+  .light-green  { background: #2d1520; }
+  .light-red.on    { background: #ff3333; box-shadow: 0 0 40px #ff3333, 0 0 80px #ff222288; }
+  .light-yellow.on { background: #ffaa00; box-shadow: 0 0 40px #ffaa00, 0 0 80px #ff880088; }
+  .light-green.on  { background: #33ff55; box-shadow: 0 0 40px #33ff55, 0 0 80px #22ff4488; }
+  .label { text-align: center; font-size: 13px; color: #8b949e; margin-top: 2px; }
+  .label .active { color: #e6edf3; font-weight: bold; }
+  .footer { font-size: 11px; color: #484f58; margin-top: 12px; }
+  .status-text { font-size: 12px; color: #484f58; margin-top: 6px; }
+  .mode-badge { font-size: 10px; color: #58a6ff; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="light-box">
+    <div class="light light-red" id="red"></div>
+    <div class="label"><span id="red-label">编程中</span></div>
+    <div class="light light-yellow" id="yellow"></div>
+    <div class="label"><span id="yellow-label">请求权限</span></div>
+    <div class="light light-green" id="green"></div>
+    <div class="label"><span id="green-label">任务完成</span></div>
+  </div>
+  <div class="status-text" id="status">⚫ 待机</div>
+  <div class="mode-badge">🔍 自动检测模式</div>
+  <div class="footer">Hermes Status Light</div>
+</div>
+<script>
+  let current = 'off';
+  async function poll() {
+    try {
+      const r = await (await fetch('/state')).json();
+      if (r.state === current) return;
+      document.querySelectorAll('.light').forEach(e=>e.classList.remove('on'));
+      document.querySelectorAll('.label span').forEach(e=>e.classList.remove('active'));
+      if (r.state && r.state !== 'off') {
+        document.getElementById(r.state)?.classList.add('on');
+        document.getElementById(r.state+'-label')?.classList.add('active');
+      }
+      const info = {red:'🔴 编程中', yellow:'🟡 请求权限', green:'🟢 任务完成', off:'⚫ 待机'};
+      document.getElementById('status').textContent = (info[r.state]||r.state) + (r.timestamp?' · '+r.timestamp:'');
+      document.title = (info[r.state]||r.state) + ' - Hermes';
+      current = r.state;
+    } catch(e) {}
+  }
+  setInterval(poll, 500);
+  poll();
+</script>
+</body>
+</html>
